@@ -29,14 +29,14 @@ public class CoverageResource extends AbstractCatalogResource {
     public CoverageResource(Context context, Request request,
             Response response, Catalog catalog) {
         super(context, request, response, CoverageInfo.class, catalog);
-        
+
     }
 
     @Override
     protected DataFormat createHTMLFormat(Request request, Response response) {
         return new ResourceHTMLFormat(CoverageInfo.class, request, response, this);
     }
-    
+
     @Override
     protected Object handleObjectGet() throws Exception {
         String workspace = getAttribute( "workspace");
@@ -63,7 +63,7 @@ public class CoverageResource extends AbstractCatalogResource {
     public boolean allowPost() {
         return getAttribute("coverage") == null;
     }
-    
+
     @Override
     protected String handleObjectPost(Object object) throws Exception {
         String workspace = getAttribute( "workspace");
@@ -88,7 +88,7 @@ public class CoverageResource extends AbstractCatalogResource {
         // We handle 2 different cases here
         if (!isNew) {
             // Configuring a partially defined coverage
-            builder.initCoverage(coverage, name);
+            builder.initCoverage(coverage, nativeName);
         } else {
             // Configuring a brand new coverage (only name has been specified)
             coverage = builder.buildCoverage(nativeName);
@@ -102,28 +102,28 @@ public class CoverageResource extends AbstractCatalogResource {
             LOGGER.warning( "Namespace: " + ns.getPrefix() + " does not match workspace: " + workspace + ", overriding." );
             ns = null;
         }
-        
+
         if ( ns == null){
             //infer from workspace
             ns = catalog.getNamespaceByPrefix( workspace );
             coverage.setNamespace( ns );
         }
-        
+
         coverage.setEnabled(true);
         catalog.validate(coverage, true).throwIfInvalid();
         catalog.add( coverage );
-        
+
         //create a layer for the coverage
         catalog.add(builder.buildLayer(coverage));
-        
+
         LOGGER.info( "POST coverage " + coveragestore + "," + coverage.getName() );
         return coverage.getName();
     }
 
     /**
      * This method returns {@code true} in case we have POSTed a Coverage object with the name only, as an instance
-     * when configuring a new coverage which has just been harvested. 
-     * 
+     * when configuring a new coverage which has just been harvested.
+     *
      * @param coverage
      * @return
      */
@@ -144,43 +144,43 @@ public class CoverageResource extends AbstractCatalogResource {
     public boolean allowPut() {
         return getAttribute("coverage") != null;
     }
-    
+
     @Override
     protected void handleObjectPut(Object object) throws Exception {
         CoverageInfo c = (CoverageInfo) object;
-        
+
         String workspace = getAttribute("workspace");
         String coveragestore = getAttribute("coveragestore");
         String coverage = getAttribute("coverage");
-        
+
         CoverageStoreInfo cs = catalog.getCoverageStoreByName(workspace, coveragestore);
         CoverageInfo original = catalog.getCoverageByCoverageStore( cs,  coverage );
         new CatalogBuilder(catalog).updateCoverage(original,c);
         calculateOptionalFields(c, original);
         catalog.validate(original, false).throwIfInvalid();
         catalog.save( original );
-        
+
         clear(original);
-        
+
         LOGGER.info( "PUT coverage " + coveragestore + "," + coverage );
     }
-    
+
     @Override
     public boolean allowDelete() {
         return getAttribute("coverage") != null;
     }
-    
+
     @Override
     protected void handleObjectDelete() throws Exception {
         String workspace = getAttribute("workspace");
         String coveragestore = getAttribute("coveragestore");
         String coverage = getAttribute("coverage");
         boolean recurse = getQueryStringValue("recurse", Boolean.class, false);
-        
+
         CoverageStoreInfo ds = catalog.getCoverageStoreByName(workspace, coveragestore);
         CoverageInfo c = catalog.getCoverageByCoverageStore( ds,  coverage );
         List<LayerInfo> layers = catalog.getLayers(c);
-        
+
         if (recurse) {
             //by recurse we clear out all the layers that public this resource
             for (LayerInfo l : layers) {
@@ -193,22 +193,22 @@ public class CoverageResource extends AbstractCatalogResource {
                 throw new RestletException( "coverage referenced by layer(s)", Status.CLIENT_ERROR_FORBIDDEN);
             }
         }
-        
+
         catalog.remove( c );
         clear(c);
-        
+
         LOGGER.info( "DELETE coverage " + coveragestore + "," + coverage );
     }
-    
+
     void clear(CoverageInfo info) {
         catalog.getResourcePool().clear(info.getStore());
     }
-    
+
     @Override
     protected void configurePersister(XStreamPersister persister, DataFormat format) {
         persister.setCallback( new XStreamPersister.Callback() {
             @Override
-            protected void postEncodeReference(Object obj, String ref, String prefix, 
+            protected void postEncodeReference(Object obj, String ref, String prefix,
                     HierarchicalStreamWriter writer, MarshallingContext context) {
                 if ( obj instanceof NamespaceInfo ) {
                     NamespaceInfo ns = (NamespaceInfo) obj;
@@ -218,7 +218,7 @@ public class CoverageResource extends AbstractCatalogResource {
                     CoverageStoreInfo cs = (CoverageStoreInfo) obj;
                     encodeLink("/workspaces/" + encode(cs.getWorkspace().getName()) +
                         "/coveragestores/" + encode(cs.getName()), writer );
-                    
+
                 }
             }
         });
