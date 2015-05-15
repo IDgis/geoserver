@@ -1529,7 +1529,7 @@
  <properties>
   <gs.version>2.6.1</gs.version>
   <gt.version>12.1</gt.version>
-  <gwc.version>1.6.0</gwc.version>
+  <gwc.version>1.6.0-gpo-0</gwc.version>
   <spring.version>3.1.4.RELEASE</spring.version>
   <spring.security.version>3.1.0.RELEASE</spring.security.version> 
   <poi.version>3.8</poi.version>
